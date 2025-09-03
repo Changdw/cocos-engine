@@ -87,6 +87,7 @@ class OldShaderCompiler extends ShaderCompiler<IOldShaderCompileInfo> {
 
         this.assignPlatformMacro(defines, pipeline.macros, PLATFORM_SPECIFIC_MACROS_FOR_OLD_PIPELINE);
         oldProgramLib.compile(device, name, defines, pipeline);
+        pipeline.compileProgram(name, defines, 'passName', 'phaseName');
     }
 
     getShadersCount (): number {

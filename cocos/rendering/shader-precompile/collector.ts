@@ -102,10 +102,22 @@ class NewShaderCollector extends ShaderCollector<INewShaderCompileInfo> implemen
         super.start();
     }
 
-    collect (name: string, defines: MacroRecord, phaseID: number, key: string): void {
+    /**
+     * 收集单个着色器的编译信息
+     *
+     * @param name 着色器名称
+     * @param defines 宏定义
+     * @param phaseID 渲染阶段ID
+     * @param key 唯一标识键
+     * @param passName Pass名称
+     * @param phaseName Phase名称
+     */
+    collect (name: string, defines: MacroRecord, phaseID: number, key: string, passName: string, phaseName: string): void {
         this.records[phaseID] ??= {};
+        // 避免重复收集相同阶段的相同着色器
         if (this.records[phaseID][key]) return;
 
+        // 过滤掉程序信息中不存在的宏定义
         const filteredDefines = this.filterTemplateDefines(name, defines, phaseID);
         this.records[phaseID][key] = {
             name,
@@ -113,6 +125,8 @@ class NewShaderCollector extends ShaderCollector<INewShaderCompileInfo> implemen
             phaseID,
             key,
             timestamp: Date.now() - this.startTime,
+            passName,
+            phaseName,
         };
     }
 

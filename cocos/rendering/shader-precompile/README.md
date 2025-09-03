@@ -123,6 +123,8 @@ interface IShaderCompileInfo {
     defines: MacroRecord;   // 宏定义
     key?: string;          // 唯一标识符
     timestamp?: number;    // 收集时间戳
+    passName?: string;     // Pass名称
+    phaseName?: string;    // Phase名称
 }
 
 // 仅用于新渲染管线

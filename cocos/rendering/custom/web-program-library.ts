@@ -46,7 +46,7 @@ import { ProgramGroup, ProgramInfo } from './web-types';
 const _setIndex = [2, 1, 3, 0];
 
 export interface IWebShaderCollector {
-    collect(name: string, defines: MacroRecord, phaseID: number, key: string): void;
+    collect(name: string, defines: MacroRecord, phaseID: number, key: string, passName: string, phaseName: string): void;
 }
 
 // make IProgramInfo from IShaderInfo
@@ -1109,7 +1109,13 @@ export class WebProgramLibrary implements ProgramLibrary {
     getProgramVariant (device: Device, phaseID: number, name: string, defines: MacroRecord, key: string | null = null): ProgramProxy | null {
         Object.assign(defines, this.pipeline?.macros);
         key ??= this.getKey(phaseID, name, defines);
-        this._shaderCollector?.collect(name, defines, phaseID, key);
+
+        // Get pass and phase names from layout graph
+        const subpassOrPassID = this.layoutGraph.getParent(phaseID);
+        const passName = this.layoutGraph.getName(subpassOrPassID);
+        const phaseName = this.layoutGraph.getName(phaseID);
+
+        this._shaderCollector?.collect(name, defines, phaseID, key, passName, phaseName);
         return this.compile(device, phaseID, name, defines, key);
     }
 

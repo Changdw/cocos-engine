@@ -49,6 +49,16 @@ export interface IShaderCompileInfo {
      * @zh 相对于收集开始时间的时间戳偏移量（毫秒）
      */
     timestamp?: number;
+    /**
+     * @en Pass name
+     * @zh Pass名称
+     */
+    passName?: string;
+    /**
+     * @en Phase name
+     * @zh Phase名称
+     */
+    phaseName?: string;
 }
 
 /**

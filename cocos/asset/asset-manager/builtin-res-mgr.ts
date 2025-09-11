@@ -317,20 +317,38 @@ export class BuiltinResMgr {
     /**
      * @internal
      */
-    public loadBuiltinAssets (): Promise<void> {
+    public loadBuiltinAssets (replace = false): Promise<void> {
         const builtinAssets = settings.querySettings<string[]>(SettingsCategory.ENGINE, 'builtinAssets');
         if (TEST || !builtinAssets) return Promise.resolve();
         const resources = this._resources;
+        const list = [
+            'util',
+            'default-physics-material',
+            'ui-base-material',
+            'ui-sprite-material',
+            'pipeline/deferred-lighting',
+        ];
+        function isInList (path: string): boolean {
+            if (!path) return false;
+            return !!list.find((p) => path.includes(p));
+        }
+        function getAssetPath (uuid: string, bundle: Bundle): string {
+            if (!uuid || !bundle) return '';
+            return (bundle.getAssetInfo(uuid) as any)?.path as string;
+        }
         return new Promise<void>((resolve, reject): void => {
             assetManager.loadBundle(BuiltinBundleName.INTERNAL, (err, bundle): void => {
                 if (err) {
                     reject(err);
                     return;
                 }
-                assetManager.loadAny(builtinAssets, (err, assets): void => {
+                const loadUuids = builtinAssets.filter((uuid) => isInList(getAssetPath(uuid, bundle)));
+                console.log(loadUuids);
+                assetManager.loadAny(replace ? loadUuids : builtinAssets, (err, assets): void => {
                     if (err) {
                         reject(err);
                     } else {
+                        console.log(assets);
                         assets.forEach((asset): void => {
                             resources[asset.name] = asset;
                             // In Editor, no need to ignore asset destroy, we use auto gc to handle destroy

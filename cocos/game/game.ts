@@ -45,7 +45,13 @@ import { IPhysicsConfig } from '../physics/framework/physics-config';
 import { effectSettings } from '../core/effect-settings';
 
 const querySettings = settings.querySettings.bind(settings);
-
+let now = 0;
+let totalNow = 0;
+const LAUNCH_TAG = 'launch cost';
+function logLaunchTime (name: string) {
+    console.log(`${LAUNCH_TAG} ${name} ${performance.now() - now} ms`);
+    now = performance.now();
+}
 /**
  * @zh
  * 游戏配置。
@@ -733,6 +739,9 @@ export class Game extends EventTarget {
      */
     public init (config: IGameConfig): Promise<void> {
         this._compatibleWithOldParams(config);
+        totalNow = performance.now();
+        now = performance.now();
+        globalThis.firstPresentTime = now;
         // DONT change the order unless you know what's you doing
         return Promise.resolve()
             // #region Base
@@ -759,6 +768,7 @@ export class Game extends EventTarget {
                     console.timeEnd('Init Base');
                 }
                 this.emit(Game.EVENT_POST_BASE_INIT);
+                logLaunchTime('Init Base');
                 return this.onPostBaseInitDelegate.dispatch();
             })
             // #endregion Base
@@ -811,6 +821,7 @@ export class Game extends EventTarget {
                     // eslint-disable-next-line no-console
                     console.timeEnd('Init Infrastructure');
                 }
+                logLaunchTime('Init Infrastructure');
             })
             .then((): Promise<void[]> => {
                 this.emit(Game.EVENT_POST_INFRASTRUCTURE_INIT);
@@ -853,9 +864,11 @@ export class Game extends EventTarget {
                     console.time('Init SubSystem');
                 }
                 director.init();
-                return builtinResMgr.loadBuiltinAssets();
+                logLaunchTime('director.init');
+                return builtinResMgr.loadBuiltinAssets(true);
             })
             .then((): Promise<void[]> => {
+                logLaunchTime('loadBuiltinAssets');
                 if (DEBUG) {
                     // eslint-disable-next-line no-console
                     console.timeEnd('Init SubSystem');
@@ -864,6 +877,7 @@ export class Game extends EventTarget {
                 return this.onPostSubsystemInitDelegate.dispatch();
             })
             .then((): void => {
+                logLaunchTime('Init SubSystem');
                 log(`Cocos Creator v${VERSION}`);
                 this.emit(Game.EVENT_ENGINE_INITED);
                 this._engineInited = true;
@@ -904,13 +918,18 @@ export class Game extends EventTarget {
                     // eslint-disable-next-line no-console
                     console.timeEnd('Init Project');
                 }
+                logLaunchTime('Init Project');
+
                 this.emit(Game.EVENT_POST_PROJECT_INIT);
                 return this.onPostProjectInitDelegate.dispatch();
             })
+            .then(() => builtinResMgr.loadBuiltinAssets())
             // #endregion Project
             .then((): void => {
                 this._inited = true;
                 this._safeEmit(Game.EVENT_GAME_INITED);
+                logLaunchTime('Handle Game Events');
+                console.log(`launch cost Total init: ${(performance.now() - totalNow).toFixed(2)} ms`);
             });
     }
 

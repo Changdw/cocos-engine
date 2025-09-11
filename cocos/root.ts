@@ -787,6 +787,8 @@ export class Root {
         }
     }
 
+    private r = false;
+
     private _frameMoveEnd (): void {
         const { director, Director } = cclegacy;
         const cameraList = this._cameraList;
@@ -801,6 +803,12 @@ export class Root {
             this._pipeline.render(cameraList);
             director.emit(Director.EVENT_AFTER_RENDER);
             this._device.present();
+            (() => {
+                if (!this.r) {
+                    this.r = true;
+                    console.log('launch cost first present', `${performance.now() - globalThis.firstPresentTime} ms`);
+                }
+            })();
         }
 
         if (this._batcher) this._batcher.reset();

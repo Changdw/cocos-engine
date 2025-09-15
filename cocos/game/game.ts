@@ -831,6 +831,7 @@ export class Game extends EventTarget {
             // #region Subsystem
             .then((): Promise<void[]> => {
                 this.emit(Game.EVENT_PRE_SUBSYSTEM_INIT);
+                logLaunchTime('Load WASM');
                 return this.onPreSubsystemInitDelegate.dispatch();
             })
             .then((): Promise<void> => effectSettings.init(querySettings(SettingsCategory.RENDERING, 'effectSettingsPath') as string))
@@ -923,7 +924,7 @@ export class Game extends EventTarget {
                 this.emit(Game.EVENT_POST_PROJECT_INIT);
                 return this.onPostProjectInitDelegate.dispatch();
             })
-            .then(() => builtinResMgr.loadBuiltinAssets())
+            // .then(() => builtinResMgr.loadBuiltinAssets())
             // #endregion Project
             .then((): void => {
                 this._inited = true;

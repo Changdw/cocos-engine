@@ -123,17 +123,36 @@ builtinResMgrProto.compileBuiltinMaterial = function () {
     this._materialsToBeCompiled.length = 0;
 };
 
-builtinResMgrProto.loadBuiltinAssets = function () {
+builtinResMgrProto.loadBuiltinAssets = function (replace = false) {
     const builtinAssets = settings.querySettings<string[]>(Settings.Category.ENGINE, 'builtinAssets');
     if (TEST || !builtinAssets) return Promise.resolve();
     const resources = this._resources;
+    const list = [
+        'util',
+        'default-physics-material',
+        'ui-base-material',
+        'ui-sprite-material',
+        'pipeline/deferred-lighting',
+        'default_fonts',
+        'internal/builtin-debug-renderer',
+    ];
+    function isInList (path: string): boolean {
+        if (!path) return false;
+        return !!list.find((p) => path.includes(p));
+    }
+    function getAssetPath (uuid: string, bundle: Bundle): string {
+        if (!uuid || !bundle) return '';
+        return (bundle.getAssetInfo(uuid) as any)?.path as string;
+    }
     return new Promise<void>((resolve, reject) => {
         assetManager.loadBundle(BuiltinBundleName.INTERNAL, (err, bundle) => {
             if (err) {
                 reject(err);
                 return;
             }
-            assetManager.loadAny(builtinAssets, (err, assets) => {
+            const loadUuids = builtinAssets.filter((uuid) => isInList(getAssetPath(uuid, bundle)));
+            console.log(`launch cost: filter builtin assets count=${loadUuids.length}`);
+            assetManager.loadAny(replace ? loadUuids : builtinAssets, (err, assets) => {
                 if (err) {
                     reject(err);
                 } else {

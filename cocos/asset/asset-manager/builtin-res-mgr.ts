@@ -343,7 +343,7 @@ export class BuiltinResMgr {
                     return;
                 }
                 const loadUuids = builtinAssets.filter((uuid) => isInList(getAssetPath(uuid, bundle)));
-                console.log(loadUuids);
+                console.log(`launch cost: filter builtin assets count=${loadUuids.length}`);
                 assetManager.loadAny(replace ? loadUuids : builtinAssets, (err, assets): void => {
                     if (err) {
                         reject(err);

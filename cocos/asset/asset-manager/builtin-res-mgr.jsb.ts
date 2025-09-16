@@ -123,7 +123,7 @@ builtinResMgrProto.compileBuiltinMaterial = function () {
     this._materialsToBeCompiled.length = 0;
 };
 
-builtinResMgrProto.loadBuiltinAssets = function (replace = false) {
+builtinResMgrProto.loadBuiltinAssets = function () {
     const builtinAssets = settings.querySettings<string[]>(Settings.Category.ENGINE, 'builtinAssets');
     if (TEST || !builtinAssets) return Promise.resolve();
     const resources = this._resources;
@@ -152,7 +152,7 @@ builtinResMgrProto.loadBuiltinAssets = function (replace = false) {
             }
             const loadUuids = builtinAssets.filter((uuid) => isInList(getAssetPath(uuid, bundle)));
             console.log(`launch cost: filter builtin assets count=${loadUuids.length}`);
-            assetManager.loadAny(replace ? loadUuids : builtinAssets, (err, assets) => {
+            assetManager.loadAny(loadUuids, (err, assets) => {
                 if (err) {
                     reject(err);
                 } else {

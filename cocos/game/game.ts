@@ -866,7 +866,7 @@ export class Game extends EventTarget {
                 }
                 director.init();
                 logLaunchTime('director.init');
-                return builtinResMgr.loadBuiltinAssets(true);
+                return builtinResMgr.loadBuiltinAssets();
             })
             .then((): Promise<void[]> => {
                 logLaunchTime('loadBuiltinAssets');
@@ -924,7 +924,6 @@ export class Game extends EventTarget {
                 this.emit(Game.EVENT_POST_PROJECT_INIT);
                 return this.onPostProjectInitDelegate.dispatch();
             })
-            // .then(() => builtinResMgr.loadBuiltinAssets())
             // #endregion Project
             .then((): void => {
                 this._inited = true;

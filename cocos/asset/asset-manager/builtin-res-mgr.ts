@@ -317,7 +317,7 @@ export class BuiltinResMgr {
     /**
      * @internal
      */
-    public loadBuiltinAssets (replace = false): Promise<void> {
+    public loadBuiltinAssets (): Promise<void> {
         const builtinAssets = settings.querySettings<string[]>(SettingsCategory.ENGINE, 'builtinAssets');
         if (TEST || !builtinAssets) return Promise.resolve();
         const resources = this._resources;
@@ -344,7 +344,8 @@ export class BuiltinResMgr {
                 }
                 const loadUuids = builtinAssets.filter((uuid) => isInList(getAssetPath(uuid, bundle)));
                 console.log(`launch cost: filter builtin assets count=${loadUuids.length}`);
-                assetManager.loadAny(replace ? loadUuids : builtinAssets, (err, assets): void => {
+                const replace = !EDITOR;
+                assetManager.loadAny(builtinAssets, (err, assets): void => {
                     if (err) {
                         reject(err);
                     } else {

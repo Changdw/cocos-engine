@@ -314,34 +314,80 @@ export class BuiltinResMgr {
         return this._resources[uuid] as T;
     }
 
+    private filterRequiredBuiltinAssets (uuids: string[], bundle: Bundle): string[] {
+        const list = [
+            'util/splash-screen',
+            'util/profiler',
+            'default-physics-material',
+            'ui-base-material',
+            'ui-sprite-material',
+            'pipeline/deferred-lighting',
+            'pipeline/skybox',
+        ];
+
+        function isInList (path: string): boolean {
+            return list.find((pathInList) => path.includes(pathInList)) !== undefined;
+        }
+
+        function getAssetPath (uuid: string, bundle: Bundle): string {
+            if (!uuid || !bundle) return '';
+            return (bundle.getAssetInfo(uuid) as any)?.path as string;
+        }
+
+        return uuids.filter((uuid): boolean => {
+            const path = getAssetPath(uuid, bundle);
+            return isInList(path);
+        });
+    }
+
     /**
      * @internal
      */
     public loadBuiltinAssets (): Promise<void> {
         const builtinAssets = settings.querySettings<string[]>(SettingsCategory.ENGINE, 'builtinAssets');
         if (TEST || !builtinAssets) return Promise.resolve();
-        const resources = this._resources;
-        return new Promise<void>((resolve, reject): void => {
+        return new Promise<Bundle>((resolve, reject): void => {
             assetManager.loadBundle(BuiltinBundleName.INTERNAL, (err, bundle): void => {
                 if (err) {
                     reject(err);
-                    return;
+                } else {
+                    resolve(bundle);
                 }
-                assetManager.loadAny(builtinAssets, (err, assets): void => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        assets.forEach((asset): void => {
-                            resources[asset.name] = asset;
-                            // In Editor, no need to ignore asset destroy, we use auto gc to handle destroy
-                            if (!EDITOR_NOT_IN_PREVIEW) { releaseManager.addIgnoredAsset(asset); }
-                            if (asset instanceof cclegacy.Material) {
-                                this._materialsToBeCompiled.push(asset as Material);
-                            }
-                        });
-                        resolve();
-                    }
-                });
+            });
+        }).then(() => this.loadBuiltinAssetsList(builtinAssets));
+    }
+
+    public loadRequiredBuiltinAssets (): Promise<void> {
+        const builtinAssets = settings.querySettings<string[]>(SettingsCategory.ENGINE, 'builtinAssets');
+        if (TEST || !builtinAssets) return Promise.resolve();
+        return new Promise<Bundle>((resolve, reject): void => {
+            assetManager.loadBundle(BuiltinBundleName.INTERNAL, (err, bundle): void => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(bundle);
+                }
+            });
+        }).then((bundle) => this.loadBuiltinAssetsList(this.filterRequiredBuiltinAssets(builtinAssets, bundle)));
+    }
+
+    private loadBuiltinAssetsList (uuids: string[], bundle?: Bundle): Promise<void> {
+        const resources = this._resources;
+        return new Promise<void>((resolve, reject): void => {
+            assetManager.loadAny(uuids, (err, assets): void => {
+                if (err) {
+                    reject(err);
+                } else {
+                    assets.forEach((asset): void => {
+                        resources[asset.name] = asset;
+                        // In Editor, no need to ignore asset destroy, we use auto gc to handle destroy
+                        if (!EDITOR_NOT_IN_PREVIEW) { releaseManager.addIgnoredAsset(asset); }
+                        if (asset instanceof cclegacy.Material) {
+                            this._materialsToBeCompiled.push(asset as Material);
+                        }
+                    });
+                    resolve();
+                }
             });
         });
     }

@@ -23,7 +23,7 @@
  THE SOFTWARE.
 */
 
-import { DEBUG, EDITOR, NATIVE, PREVIEW, TEST, EDITOR_NOT_IN_PREVIEW, WECHAT, USE_XR } from 'internal:constants';
+import { DEBUG, EDITOR, NATIVE, PREVIEW, TEST, EDITOR_NOT_IN_PREVIEW, WECHAT, USE_XR, BUILD } from 'internal:constants';
 import { systemInfo } from 'pal/system-info';
 import { findCanvas, loadJsFile } from 'pal/env';
 import { Pacer } from 'pal/pacer';
@@ -45,6 +45,11 @@ import { IPhysicsConfig } from '../physics/framework/physics-config';
 import { effectSettings } from '../core/effect-settings';
 
 const querySettings = settings.querySettings.bind(settings);
+
+function isLoadBuiltinAssetsOpt (): boolean {
+    const ONLY_LOAD_REQUIRED_BUILTIN_ASSETS = true;
+    return ONLY_LOAD_REQUIRED_BUILTIN_ASSETS && BUILD;
+}
 
 /**
  * @zh
@@ -473,6 +478,7 @@ export class Game extends EventTarget {
     private _deltaTime = 0.0;
     private _useFixedDeltaTime = false;
     private _shouldLoadLaunchScene = true;
+    private _isFirstPresent = false;
 
     /**
      * @en The event delegate pre base module initialization. At this point you can not use pal/logging/sys/settings API.
@@ -853,7 +859,8 @@ export class Game extends EventTarget {
                     console.time('Init SubSystem');
                 }
                 director.init();
-                return builtinResMgr.loadBuiltinAssets();
+                const opt = isLoadBuiltinAssetsOpt();
+                return opt ? builtinResMgr.loadRequiredBuiltinAssets() : builtinResMgr.loadBuiltinAssets();
             })
             .then((): Promise<void[]> => {
                 if (DEBUG) {
@@ -1084,6 +1091,13 @@ export class Game extends EventTarget {
             }
         } else {
             director.tick(this._calculateDT(false));
+            if (!this._isFirstPresent) {
+                this._isFirstPresent = true;
+                const opt = isLoadBuiltinAssetsOpt();
+                if (opt) {
+                    builtinResMgr.loadBuiltinAssets().catch(() => {});
+                }
+            }
         }
     }
 

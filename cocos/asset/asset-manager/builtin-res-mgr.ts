@@ -323,6 +323,7 @@ export class BuiltinResMgr {
             'ui-sprite-material',
             'pipeline/deferred-lighting',
             'pipeline/skybox',
+            'ui-graphics-material',
         ];
 
         function isInList (path: string): boolean {
